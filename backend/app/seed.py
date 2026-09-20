@@ -1,35 +1,77 @@
 from app.database import SessionLocal
-from app.models import User, Ticket, Document
+from app.models import User, Ticket, KnowledgeArticle, EmployeeRequest
+from app.data.veridian_kb import VERIDIAN_KNOWLEDGE_BASE
+from app.data.veridian_seed_data import VERIDIAN_EMPLOYEES, VERIDIAN_REQUESTS, VERIDIAN_TICKETS
 
 
 def seed_if_empty():
     db = SessionLocal()
     try:
-        if db.query(User).count() > 0:
-            return
+        # Check if Knowledge Base is already seeded
+        if db.query(KnowledgeArticle).count() == 0:
+            kb_records = [
+                KnowledgeArticle(
+                    kb_id=item["kb_id"],
+                    title=item["title"],
+                    category=item["category"],
+                    content=item["content"],
+                    summary=item["summary"],
+                    requires_approval=item.get("requires_approval", False),
+                    approval_authority=item.get("approval_authority"),
+                )
+                for item in VERIDIAN_KNOWLEDGE_BASE
+            ]
+            db.add_all(kb_records)
 
-        users = [
-            User(name="Alice Admin", role="admin"),
-            User(name="Ivan IT", role="it_agent"),
-            User(name="Eve Employee", role="employee"),
-        ]
+        # Check if Employees are seeded
+        if db.query(User).count() == 0:
+            user_records = [
+                User(
+                    name=emp["name"],
+                    email=emp["email"],
+                    role=emp["role"],
+                    employment_type=emp["employment_type"],
+                    department=emp["department"],
+                )
+                for emp in VERIDIAN_EMPLOYEES
+            ]
+            db.add_all(user_records)
 
-        tickets = [
-            Ticket(title="VPN not connecting", status="OPEN", priority="MEDIUM", description="Cannot connect from home"),
-            Ticket(title="Password reset", status="OPEN", priority="LOW", description="Forgot password"),
-            Ticket(title="Laptop failure", status="IN_PROGRESS", priority="HIGH", description="Device not booting"),
-        ]
+        # Check if Employee Requests (REQ-01..15) are seeded
+        if db.query(EmployeeRequest).count() == 0:
+            req_records = [
+                EmployeeRequest(
+                    req_id=req["req_id"],
+                    employee_name=req["employee_name"],
+                    employee_email=req["employee_email"],
+                    date_opened=req["date_opened"],
+                    request_text=req["request_text"],
+                    initial_action=req["initial_action"],
+                    status=req["status"],
+                    resolution_guidance=req["resolution_guidance"],
+                    escalation_target=req["escalation_target"],
+                )
+                for req in VERIDIAN_REQUESTS
+            ]
+            db.add_all(req_records)
 
-        docs = [
-            Document(title="VPN Troubleshooting", path="scripts/sample_docs/vpn_troubleshooting.md", allowed_roles="employee,it_agent,admin"),
-            Document(title="Password Reset Policy", path="scripts/sample_docs/password_reset_policy.md", allowed_roles="employee,it_agent,admin"),
-            Document(title="Onboarding Checklist", path="scripts/sample_docs/onboarding_checklist.md", allowed_roles="employee,it_agent,admin"),
-            Document(title="Laptop Replacement Policy", path="scripts/sample_docs/laptop_replacement_policy.md", allowed_roles="employee,it_agent,admin"),
-            Document(title="Incident Response Playbook", path="scripts/sample_docs/incident_response_playbook.md", allowed_roles="it_agent,admin"),
-            Document(title="HR Admin Policy", path="scripts/sample_docs/hr_admin_policy.md", allowed_roles="admin"),
-        ]
+        # Check if Ticket Queue (TK-1042..1051) is seeded
+        if db.query(Ticket).count() == 0:
+            ticket_records = [
+                Ticket(
+                    ticket_id=t["ticket_id"],
+                    employee_name=t["employee_name"],
+                    issue_summary=t["issue_summary"],
+                    status=t["status"],
+                    is_active=t["is_active"],
+                    category=t.get("category"),
+                    priority=t.get("priority", "MEDIUM"),
+                    resolution_notes=t.get("resolution_notes"),
+                )
+                for t in VERIDIAN_TICKETS
+            ]
+            db.add_all(ticket_records)
 
-        db.add_all(users + tickets + docs)
         db.commit()
     finally:
         db.close()
