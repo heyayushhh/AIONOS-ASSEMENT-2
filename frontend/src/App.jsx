@@ -7,6 +7,7 @@ import {
   getKnowledgeBase,
   getScenarios,
   getMetrics,
+  API_BASE,
 } from "./api";
 import {
   Terminal,
@@ -132,11 +133,16 @@ export default function App() {
       getMetrics().then(setMetrics).catch(() => {});
       getTickets().then(setTickets).catch(() => {});
     } catch (err) {
+      const isLocal = API_BASE.includes("localhost") || API_BASE.includes("127.0.0.1");
+      const targetHint = isLocal
+        ? `Ensure backend is running locally at \`${API_BASE}\`.`
+        : `Connecting to \`${API_BASE}\`. If your backend is hosted on a free-tier platform (like Render), it may take 30–50 seconds to wake up from spin-down. Please try again in a few moments.`;
+
       setMessages((prev) => [
         ...prev,
         {
           sender: "agent",
-          text: `⚠️ **Connection Alert**: ${err.message}. Ensure backend is running at http://localhost:8000.`,
+          text: `⚠️ **Connection Alert**: ${err.message || "Failed to fetch"}.\n\n${targetHint}`,
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         },
       ]);
@@ -279,7 +285,7 @@ export default function App() {
         </div>
 
         <div className="header-actions">
-          <div className="status-indicator">
+          <div className="status-indicator" title={`Connected Backend: ${API_BASE}`}>
             <span className="status-dot"></span>
             <span>Agent Online • Grounded</span>
           </div>

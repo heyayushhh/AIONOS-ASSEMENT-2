@@ -283,6 +283,44 @@ npm --prefix frontend run build
 
 ---
 
+## 🚀 Production Deployment (Vercel Frontend + Render Backend)
+
+### 1. Frontend Deployment on Vercel
+
+When deploying the React frontend on **Vercel**, configure the project with the following settings:
+
+* **Framework Preset**: `Vite`
+* **Root Directory**: `frontend`
+* **Build Command**: `npm run build`
+* **Output Directory**: `dist`
+* **Install Command**: `npm install`
+
+#### Environment Variables in Vercel
+Navigate to **Project Settings** → **Environment Variables** and add:
+
+| Variable Name | Environment | Value | Description |
+| :--- | :--- | :--- | :--- |
+| `VITE_API_URL` | Production, Preview, Development | `https://aionos-assement-2.onrender.com` | Base URL of the deployed FastAPI backend on Render |
+
+> [!IMPORTANT]
+> **Vite Environment Variable Baking**: Vite statically inlines `import.meta.env.VITE_API_URL` into JavaScript assets **during build time**. If you added or modified `VITE_API_URL` after creating the project, you must go to **Deployments** → click the three dots (`...`) on your latest deployment → click **Redeploy** (uncheck "Use existing build cache") so the production URL is embedded into the bundle.
+
+#### Local Development Fallback
+For local development, `VITE_API_URL` is completely optional:
+* If `VITE_API_URL` is omitted, the frontend safely defaults to `http://localhost:8000`.
+* Trailing slashes are automatically sanitized (e.g. `https://aionos-assement-2.onrender.com/` → `https://aionos-assement-2.onrender.com`).
+
+---
+
+### 2. Backend Deployment on Render
+
+* **Live Service**: `https://aionos-assement-2.onrender.com`
+* **Health Check**: `GET https://aionos-assement-2.onrender.com/health`
+* **CORS Settings**: Backend `CORS_ORIGINS` defaults to `*` and Starlette regex permits all `https://*.vercel.app` domains, `https://*.onrender.com`, and localhost.
+* **Cold Starts**: Render free-tier web services automatically spin down after 15 minutes of inactivity. Initial requests after idle may take 30–50 seconds while the container initializes. The frontend automatically detects this and provides clear feedback to the user.
+
+---
+
 ## ⚠️ Known Limitations & Production Roadmap
 
 1. **Simulated Live Directory**: In the current prototype, user authentication is simulated via the Requester Persona dropdown rather than an active enterprise Single Sign-On (SSO / Okta / Azure AD) provider.

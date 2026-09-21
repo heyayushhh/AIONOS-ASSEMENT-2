@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     n8n_ticket_status_webhook_url: Optional[str] = ""
     gemini_api_key: Optional[str] = ""
     embedding_model: str = "all-MiniLM-L6-v2"
-    cors_origins: str = "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
+    cors_origins: str = "*"
     demo_seed: bool = True
 
 
